@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Login</h2>
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </form>
+                        <div id="login-error" class="text-danger text-center mt-3"></div>
+                        <p class="text-center mt-3">Don't have an account? <a href="/signup.html">Signup here</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        
+        document.querySelector("form").addEventListener("submit", async function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const username = document.querySelector("#username").value;
+    const password = document.querySelector("#password").value;
+
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: username, password: password })
+        });
+
+        // Check if the response is JSON and handle it
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            window.location.href = "dashboard.html";
+        } else {
+            document.querySelector("#login-error").innerText = result.message;
+        }
+    } catch (error) {
+        document.querySelector("#login-error").innerText = error.message || "An error occurred. Please try again.";
+    }
+});
+
+        </script>
+</body>
+</html>
