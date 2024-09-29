@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odisha Boundary Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align: center;">Odisha District Map with Green Score</h1>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var odishaBounds = [[17.780, 81.360], [22.570, 87.530]];
+
+        var map = L.map('map', {
+            maxBounds: odishaBounds,
+            maxZoom: 18,
+            minZoom: 6,
+        }).fitBounds(odishaBounds);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            opacity: 0.7
+        }).addTo(map);
+
+        var districtGreenScores = {
+    'Angul': 0.744,
+    'Balangir': 0.225,
+    'Baleshwar': 0.109,
+    'Bargarh': 0.251,
+    'Bhadrak': 0.15,
+    'Bhubaneswar': 0.284,
+    'Cuttack': 0.271,
+    'Dhenkanal': 0.525,
+    'Gajapati': 0.811,
+    'Ganjam': 0.420,
+    'Jagatsinghapur': 0.085,
+    'Jajapur': 0.094,
+    'Jharsuguda': 0.181,
+    'Kalahandi': 0.570,
+    'Kandhamal': 1.0,
+    'Kendrapara': 0.075,
+    'Kendujhar': 0.689,
+    'Khordha': 0.185,
+    'Koraput': 0.396,
+    'Malkangiri': 0.671,
+    'Mayurbhanj': 0.680,
+    'Nabarangapur': 0.301,
+    'Nayagarh': 0.758,
+    'Nuapada': 0.491,
+    'Puri': 0.052,
+    'Rayagada': 0.761,
+    'Rourkela': 0.836,
+    'Sambalpur': 0.802,
+    'Sundargarh': 0.760,
+    'Talcher': 0.749
+};
+
+
+        // Function to get the color based on green score
+        function getColor(score) {
+            var invertedScore = 1 - score;  // Invert the score
+            return `rgba(0, 255, 0, ${invertedScore})`;  // More green for lower score
+        }
+
+        var geojsonLayer;
+
+        // Function to reset all districts to default style
+        function resetStyle() {
+            geojsonLayer.resetStyle();
+        }
+
+        // Fetching the GeoJSON data
+        fetch('Orissa.geojson')
+            .then(response => response.json())
+            .then(geojsonData => {
+                geojsonLayer = L.geoJSON(geojsonData, {
+                    style: function (feature) {
+                        return {
+                            color: "#0000FF",
+                            weight: 1,
+                            opacity: 0.8,
+                            fillColor: "transparent",  // Initially transparent fill
+                            fillOpacity: 0.7
+                        };
+                    },
+                    // Function to bind popups showing district names and zoom on click
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.Dist_Name) {
+                            var district = feature.properties.Dist_Name;
+                            var score = districtGreenScores[district] || "No score available";
+                            layer.bindPopup(district + ": Green Score - " + score);
+
+                            // Zoom to district bounds on click and color only the clicked district
+                            layer.on('click', function () {
+                                resetStyle(); // Reset other districts to default style
+
+                                // Set the clicked district's color based on green score
+                                var score = districtGreenScores[district] || 0;
+                                layer.setStyle({
+                                    fillColor: getColor(score),
+                                    fillOpacity: 0.7  // Show color for the clicked district
+                                });
+
+                                map.fitBounds(layer.getBounds()); // Zoom to the clicked district
+                            });
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.error('Error loading GeoJSON:', error));
+
+        map.locate({
+            setView: true,
+            maxZoom: 16,
+        });
+
+        map.on('locationfound', function (e) {
+            L.marker(e.latlng).addTo(map)
+                .bindPopup("You are here!")
+                .openPopup();
+        });
+
+        map.on('locationerror', function (e) {
+            alert("Location access denied.");
+        });
+    </script>
+
+</body>
+</html>
